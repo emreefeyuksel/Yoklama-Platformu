@@ -1,6 +1,8 @@
 const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
+const cors = require('cors');
+require('dotenv').config();
 const compression = require('compression');
 const multer = require('multer');
 const XLSX = require('xlsx');
@@ -25,6 +27,10 @@ function generateCode(length = 8) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use(cors({
+  origin: (origin, cb) => cb(null, true), // allow all origins; tighten later
+  credentials: false,
+}));
 app.use(helmet());
 app.use(compression());
 app.use(express.urlencoded({ extended: true }));
@@ -86,7 +92,7 @@ app.post('/instructor/session', upload.single('roster'), async (req, res) => {
     if (!session) session = helpers.getSessionByLectureWeek.get(lecture.id, week);
 
     // Build QR link to student page
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const qrUrl = `${baseUrl}/ogrenci_yoklama?c=${encodeURIComponent(session.code)}`;
     const qrPng = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2 });
 
@@ -172,7 +178,7 @@ app.get('/instructor/qr', async (req, res) => {
   const code = (req.query.c || '').trim();
   const session = code ? helpers.getSessionByCode.get(code) : null;
   if (!session) return res.status(404).send('Session not found');
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
   const qrUrl = `${baseUrl}/ogrenci_yoklama?c=${encodeURIComponent(session.code)}`;
   const qrPng = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2 });
   const lecture = db.prepare('SELECT name FROM lectures WHERE id = ?').get(session.lecture_id);
