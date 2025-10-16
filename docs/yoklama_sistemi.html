@@ -494,22 +494,23 @@
                     alert('Sunucu adresi ayarlı değil. Lütfen sağ üstteki tarayıcı konsolundan localStorage.setItem(\'BACKEND_URL\', \'https://yourapp.onrender.com\') ile ayarlayın.');
                     return;
                 }
-                const form = new FormData();
-                const fileInput = document.getElementById('excelFile');
-                if (!fileInput.files[0]) { alert('⚠️ Lütfen önce öğrenci listesi yükleyin!'); return; }
-                form.append('roster', fileInput.files[0]);
-                form.append('lectureName', courseName);
-                form.append('week', week);
-                const resp = await fetch(BACKEND_URL + '/api/session', { method: 'POST', body: form });
+                // Öğrenci listesi Excel'den zaten client tarafında parse edildi (studentDatabase)
+                const students = studentDatabase.map(s => ({ student_number: s.number, full_name: s.name }));
+                const payload = { course_name: courseName, week_number: Number(week), students };
+                const resp = await fetch(BACKEND_URL + '/api/create_session.php', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
                 if (!resp.ok) { const t = await resp.text(); throw new Error(t || 'API error'); }
                 const data = await resp.json();
 
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
-                new QRCode(qrContainer, { text: data.qrUrl, width: 256, height: 256, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.H });
-                document.getElementById('qrCourseName').textContent = data.lectureName;
-                document.getElementById('qrWeek').textContent = data.week + '. Hafta';
-                document.getElementById('sessionId').textContent = data.code;
+                new QRCode(qrContainer, { text: data.qr_url, width: 256, height: 256, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.H });
+                document.getElementById('qrCourseName').textContent = data.course_name;
+                document.getElementById('qrWeek').textContent = data.week_number + '. Hafta';
+                document.getElementById('sessionId').textContent = data.session_id;
                 document.getElementById('qrContainer').style.display = 'block';
                 document.getElementById('qrContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (error) {

@@ -401,26 +401,30 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Kaydediliyor...';
 
-                // Yeni katılımı ekle
-                sessionData.attendances.push({
-                    number: studentNumber,
-                    name: studentName,
-                    time: new Date().toLocaleString('tr-TR')
+                const BACKEND_URL = localStorage.getItem('BACKEND_URL') || '';
+                if (!BACKEND_URL) throw new Error('Sunucu adresi ayarlı değil.');
+
+                fetch(BACKEND_URL + '/api/mark_attendance.php', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ session_id: sessionId, student_number: studentNumber, full_name: studentName })
+                })
+                .then(async (r) => {
+                  if (!r.ok) throw new Error(await r.text());
+                  return r.json();
+                })
+                .then(() => {
+                  showSuccessMessage(studentName);
+                  document.getElementById('attendanceForm').reset();
+                })
+                .catch((err) => {
+                  console.error(err);
+                  showMessage('❌ Yoklama kaydedilirken bir hata oluştu. ' + (err.message||''), 'error');
+                })
+                .finally(() => {
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = '✅ Yoklamayı Gönder';
                 });
-
-                // localStorage'a kaydet
-                const storedData = JSON.parse(localStorage.getItem('yoklamaData'));
-                storedData.sessions[sessionId] = sessionData;
-                localStorage.setItem('yoklamaData', JSON.stringify(storedData));
-
-                // Başarı mesajı
-                showSuccessMessage(studentName);
-
-                // Formu temizle
-                document.getElementById('attendanceForm').reset();
-
-                // Katılım sayısını güncelle
-                displaySessionInfo();
 
             } catch (error) {
                 console.error('Kayıt hatası:', error);
