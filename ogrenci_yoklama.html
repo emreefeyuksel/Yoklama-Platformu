@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öğrenci Yoklama</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .session-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .session-info h2 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .session-info p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            display: block;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading:after {
+            content: "...";
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+
+        .error-container {
+            text-align: center;
+            color: #721c24;
+        }
+
+        .error-container h2 {
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .success-icon {
+            font-size: 4em;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .attendance-count {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .attendance-count strong {
+            color: #667eea;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Yoklama Sistemi</h1>
+            <p style="color: #666;">Öğrenci Giriş Formu</p>
+        </div>
+
+        <div id="loadingContainer" class="loading">
+            Oturum bilgileri yükleniyor
+        </div>
+
+        <div id="formContainer" style="display: none;">
+            <div class="session-info" id="sessionInfo">
+                <!-- JavaScript ile doldurulacak -->
+            </div>
+
+            <form id="attendanceForm" onsubmit="submitAttendance(event)">
+                <div class="form-group">
+                    <label for="studentNumber">👤 Öğrenci Numarası</label>
+                    <input 
+                        type="text" 
+                        id="studentNumber" 
+                        name="studentNumber"
+                        placeholder="Örn: 18070003013"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="studentName">📝 Ad Soyad</label>
+                    <input 
+                        type="text" 
+                        id="studentName" 
+                        name="studentName"
+                        placeholder="Adınızı ve soyadınızı girin"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button type="submit" id="submitBtn">
+                    ✅ Yoklamayı Gönder
+                </button>
+
+                <div class="attendance-count" id="attendanceCount" style="display: none;">
+                    <!-- JavaScript ile doldurulacak -->
+                </div>
+            </form>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <div id="errorContainer" style="display: none;">
+            <!-- Hata durumunda gösterilecek -->
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let sessionData = null;
+        let studentDatabase = [];
+
+        // Sayfa yüklendiğinde
+        window.onload = function() {
+            // URL'den session parametresini al
+            const urlParams = new URLSearchParams(window.location.search);
+            sessionId = urlParams.get('session');
+
+            if (!sessionId) {
+                showError('Geçersiz QR Kod', 'Bu sayfaya erişmek için geçerli bir QR kod okutmalısınız.');
+                return;
+            }
+
+            loadSession();
+        };
+
+        function loadSession() {
+            try {
+                // localStorage'dan verileri yükle
+                const storedData = localStorage.getItem('yoklamaData');
+                
+                if (!storedData) {
+                    showError('Veri Bulunamadı', 'Sistem verilerine erişilemiyor. Lütfen öğretmeninizle iletişime geçin.');
+                    return;
+                }
+
+                const data = JSON.parse(storedData);
+                studentDatabase = data.students || [];
+                const sessions = data.sessions || {};
+
+                // Session kontrolü
+                if (!sessions[sessionId]) {
+                    showError('Geçersiz Oturum', 'Bu oturum bulunamadı veya süresi dolmuş olabilir.');
+                    return;
+                }
+
+                sessionData = sessions[sessionId];
+
+                // Session bilgilerini göster
+                displaySessionInfo();
+                showForm();
+
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                showError('Teknik Hata', 'Veriler yüklenirken bir hata oluştu: ' + error.message);
+            }
+        }
+
+        function displaySessionInfo() {
+            const sessionInfo = document.getElementById('sessionInfo');
+            const attendanceCount = document.getElementById('attendanceCount');
+            
+            sessionInfo.innerHTML = `
+                <h2>📚 ${sessionData.courseName}</h2>
+                <p>🗓️ ${sessionData.week}. Hafta</p>
+                <p style="font-size: 0.85em; margin-top: 8px;">${sessionData.date}</p>
+            `;
+
+            const currentCount = sessionData.attendances.length;
+            const totalCount = studentDatabase.length;
+            
+            attendanceCount.innerHTML = `
+                Şu ana kadar <strong>${currentCount}</strong> / ${totalCount} öğrenci yoklama verdi
+            `;
+            attendanceCount.style.display = 'block';
+        }
+
+        function showForm() {
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('formContainer').style.display = 'block';
+        }
+
+        function showError(title, message) {
+            document.getElementById('loadingContainer').style.display = 'none';
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `
+                <div class="error-container">
+                    <div style="font-size: 4em; margin-bottom: 20px;">❌</div>
+                    <h2>${title}</h2>
+                    <p style="margin-top: 15px; line-height: 1.6;">${message}</p>
+                </div>
+            `;
+            errorContainer.style.display = 'block';
+        }
+
+        function submitAttendance(event) {
+            event.preventDefault();
+
+            const studentNumber = document.getElementById('studentNumber').value.trim();
+            const studentName = document.getElementById('studentName').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Validasyon
+            if (!studentNumber || !studentName) {
+                showMessage('Lütfen tüm alanları doldurun!', 'error');
+                return;
+            }
+
+            // Öğrenci listede var mı kontrol et
+            const student = studentDatabase.find(s => s.number === studentNumber);
+            if (!student) {
+                showMessage('❌ Öğrenci numarası sistemde bulunamadı! Lütfen numaranızı kontrol edin.', 'error');
+                return;
+            }
+
+            // Daha önce yoklama verilmiş mi kontrol et
+            const alreadyMarked = sessionData.attendances.find(a => a.number === studentNumber);
+            if (alreadyMarked) {
+                showMessage(`⚠️ ${studentName}, yoklamanız daha önce alınmış!\n\nKayıt Zamanı: ${alreadyMarked.time}`, 'info');
+                return;
+            }
+
+            // Yoklamayı kaydet
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Kaydediliyor...';
+
+                // Yeni katılımı ekle
+                sessionData.attendances.push({
+                    number: studentNumber,
+                    name: studentName,
+                    time: new Date().toLocaleString('tr-TR')
+                });
+
+                // localStorage'a kaydet
+                const storedData = JSON.parse(localStorage.getItem('yoklamaData'));
+                storedData.sessions[sessionId] = sessionData;
+                localStorage.setItem('yoklamaData', JSON.stringify(storedData));
+
+                // Başarı mesajı
+                showSuccessMessage(studentName);
+
+                // Formu temizle
+                document.getElementById('attendanceForm').reset();
+
+                // Katılım sayısını güncelle
+                displaySessionInfo();
+
+            } catch (error) {
+                console.error('Kayıt hatası:', error);
+                showMessage('❌ Yoklama kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✅ Yoklamayı Gönder';
+            }
+        }
+
+        function showSuccessMessage(name) {
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            messageDiv.className = 'message success';
+            messageDiv.innerHTML = `
+                <div class="success-icon">✅</div>
+                <div style="text-align: center;">
+                    <strong style="font-size: 1.2em;">Başarılı!</strong>
+                    <p style="margin-top: 10px;">${name}, yoklamanız başarıyla kaydedildi.</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+                        📅 ${new Date().toLocaleString('tr-TR')}
+                    </p>
+                </div>
+            `;
+
+            // 3 saniye sonra formu yeniden aktif et
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✅ Yoklamayı Gönder';
+            }, 4000);
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+            
+            // 5 saniye sonra mesajı gizle
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
