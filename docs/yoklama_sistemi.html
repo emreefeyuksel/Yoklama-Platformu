@@ -362,6 +362,7 @@
 
     <script>
         let studentDatabase = [];
+        const BACKEND_URL = localStorage.getItem('BACKEND_URL') || '';
         let sessions = {};
         let currentSessionId = null;
 
@@ -466,7 +467,7 @@
             document.getElementById('studentListPreview').style.display = 'block';
         }
 
-        function generateQR() {
+        async function generateQR() {
             const courseName = document.getElementById('courseName').value.trim();
             const week = document.getElementById('weekSelect').value;
 
@@ -489,42 +490,28 @@
             }
 
             try {
-                currentSessionId = 'session_' + Date.now();
-                sessions[currentSessionId] = {
-                    courseName: courseName,
-                    week: week,
-                    date: new Date().toLocaleString('tr-TR'),
-                    attendances: []
-                };
-
-                saveToStorage();
+                if (!BACKEND_URL) {
+                    alert('Sunucu adresi ayarlı değil. Lütfen sağ üstteki tarayıcı konsolundan localStorage.setItem(\'BACKEND_URL\', \'https://yourapp.onrender.com\') ile ayarlayın.');
+                    return;
+                }
+                const form = new FormData();
+                const fileInput = document.getElementById('excelFile');
+                if (!fileInput.files[0]) { alert('⚠️ Lütfen önce öğrenci listesi yükleyin!'); return; }
+                form.append('roster', fileInput.files[0]);
+                form.append('lectureName', courseName);
+                form.append('week', week);
+                const resp = await fetch(BACKEND_URL + '/api/session', { method: 'POST', body: form });
+                if (!resp.ok) { const t = await resp.text(); throw new Error(t || 'API error'); }
+                const data = await resp.json();
 
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
-
-                const url = window.location.href.split('?')[0] + '?session=' + currentSessionId;
-                
-                new QRCode(qrContainer, {
-                    text: url,
-                    width: 256,
-                    height: 256,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-
-                document.getElementById('qrCourseName').textContent = courseName;
-                document.getElementById('qrWeek').textContent = week + '. Hafta';
-                document.getElementById('sessionId').textContent = currentSessionId;
+                new QRCode(qrContainer, { text: data.qrUrl, width: 256, height: 256, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.H });
+                document.getElementById('qrCourseName').textContent = data.lectureName;
+                document.getElementById('qrWeek').textContent = data.week + '. Hafta';
+                document.getElementById('sessionId').textContent = data.code;
                 document.getElementById('qrContainer').style.display = 'block';
-
-                // Smooth scroll to QR code
                 document.getElementById('qrContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-                updateSessionSelect();
-                updateStats();
-
-                console.log('✅ QR Kod oluşturuldu:', currentSessionId);
             } catch (error) {
                 alert('❌ QR kod oluşturulurken hata:\n' + error.message);
                 console.error('QR Error:', error);

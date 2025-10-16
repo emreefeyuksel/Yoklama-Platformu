@@ -103,6 +103,59 @@ app.post('/instructor/session', upload.single('roster'), async (req, res) => {
   }
 });
 
+// JSON API: create session and return QR info
+app.post('/api/session', upload.single('roster'), async (req, res) => {
+  try {
+    const lectureName = (req.body.lectureName || '').trim();
+    const week = parseInt(req.body.week, 10);
+    if (!lectureName || !week || week < 1 || week > 14) {
+      return res.status(400).json({ error: 'Provide lecture name and valid week (1-14).' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Upload Excel with columns: student_id, name.' });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: 'Excel sheet is empty.' });
+    }
+
+    const now = dayjs().toISOString();
+    let lecture = helpers.getLectureByName.get(lectureName);
+    if (!lecture) {
+      lecture = helpers.insertLecture.get(lectureName, now);
+      if (!lecture) lecture = helpers.getLectureByName.get(lectureName);
+    }
+
+    const insert = db.transaction((rows) => {
+      for (const row of rows) {
+        const studentId = String(row.student_id || row.StudentID || row.id || row.Numara || '').trim();
+        const name = String(row.name || row.Name || row['Ad Soyad'] || '').trim();
+        if (!studentId || !name) continue;
+        const student = helpers.upsertStudent.get(studentId, name);
+        helpers.upsertEnrollment.run(lecture.id, student.id);
+      }
+    });
+    insert(rows);
+
+    const code = generateCode(8);
+    const expiresAt = dayjs().add(2, 'hour').toISOString();
+    let session = helpers.upsertSession.get(lecture.id, week, code, now, expiresAt);
+    if (!session) session = helpers.getSessionByLectureWeek.get(lecture.id, week);
+
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const qrUrl = `${baseUrl}/ogrenci_yoklama?c=${encodeURIComponent(session.code)}`;
+    const qrPng = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2 });
+    return res.json({ lectureName: lecture.name, week, code: session.code, qrUrl, qrPng, expiresAt });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Unexpected error while creating session.' });
+  }
+});
+
 // Student page via QR
 app.get('/ogrenci_yoklama', (req, res) => {
   const code = (req.query.c || '').trim();
