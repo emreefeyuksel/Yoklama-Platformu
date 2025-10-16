@@ -1,0 +1,11 @@
+<%- include('layout', { body: null }) %>
+<section class="card center">
+  <span class="pill">QR</span>
+  <h2><%= lectureName %> · Hafta <%= week %> · Yoklama</h2>
+  <img src="<%= qrPng %>" alt="QR" class="qr" />
+  <p class="muted">Öğrenci yoklama linki:</p>
+  <p>
+    <a href="<%= qrUrl %>" data-copy>Linki kopyala</a>
+  </p>
+  <p><a class="button" href="/instructor">Yeni oluştur</a></p>
+</section>

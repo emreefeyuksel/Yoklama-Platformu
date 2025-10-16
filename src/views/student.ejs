@@ -1,0 +1,23 @@
+<%- include('layout', { body: null }) %>
+<section class="card hero">
+  <div>
+    <span class="pill">Öğrenci</span>
+    <h2>Öğrenci Yoklama</h2>
+    <p>QR ile geldiyseniz, öğrenci numaranızı girerek yoklamayı tamamlayın.</p>
+  </div>
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+  <% if (message) { %>
+    <div class="alert alert-ok"><%= message %></div>
+  <% } %>
+  <form method="post" action="/ogrenci_yoklama">
+    <input type="hidden" name="code" value="<%= code %>" />
+    <label>
+      Öğrenci No
+      <input inputmode="numeric" pattern="[0-9]+" name="student_id" placeholder="Örn: 201812345" required />
+    </label>
+    <button type="submit">Yoklama Gir</button>
+  </form>
+  <p class="muted">Kod geçersizse eğitmene bildiriniz.</p>
+</section>

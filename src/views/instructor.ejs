@@ -1,0 +1,46 @@
+<%- include('layout', { body: null }) %>
+<section class="card hero">
+  <div>
+    <span class="pill">Eğitmen</span>
+    <h2>Eğitmen Paneli</h2>
+    <p>Excel yükleyin, dersi ve haftayı seçin, QR yayınlayın. Öğrenciler mobil cihazla tarasın.</p>
+  </div>
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+  <form action="/instructor/session" method="post" enctype="multipart/form-data" class="form-grid">
+    <label>
+      Ders Adı
+      <input type="text" name="lectureName" value="<%= lectureName %>" placeholder="Örn: Matematik 101" required />
+    </label>
+    <label>
+      Hafta (1-14)
+      <select name="week" required>
+        <% for (let i=1;i<=14;i++){ %>
+          <option value="<%= i %>" <%= Number(week)===i? 'selected':'' %>><%= i %></option>
+        <% } %>
+      </select>
+    </label>
+    <label>
+      Excel Öğrenci Listesi (.xlsx/.xls)
+      <input type="file" name="roster" accept=".xlsx,.xls" required />
+    </label>
+    <button type="submit">QR Oluştur</button>
+  </form>
+  <p class="muted">Excel kolonları: <code>student_id</code>, <code>name</code>. Başlık satırı olmalı.</p>
+  <hr />
+  <form class="inline" method="get" action="/instructor/export">
+    <label>
+      Ders Adı
+      <input type="text" name="lecture" placeholder="Aynı ders adı" />
+    </label>
+    <label>
+      Format
+      <select name="format">
+        <option value="xlsx">XLSX</option>
+        <option value="csv">CSV</option>
+      </select>
+    </label>
+    <button type="submit">Yoklama Dışa Aktar</button>
+  </form>
+</section>
